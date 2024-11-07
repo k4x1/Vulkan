@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.tcc": "cpp",
+			"cinttypes": "cpp",
+			"cstdint": "cpp",
+			"string": "cpp"
+		}
+	}
+}
