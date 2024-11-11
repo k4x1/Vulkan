@@ -167,15 +167,18 @@
     <ClInclude Include="src\DemoScene.h" />
     <ClInclude Include="src\framework.h" />
     <ClInclude Include="src\gettime.h" />
+    <ClInclude Include="src\MeshModel.h" />
     <ClInclude Include="src\scene.h" />
     <ClInclude Include="src\scene_data.h" />
     <ClInclude Include="src\ShaderLoader.h" />
     <ClInclude Include="src\TextureLoader.h" />
+    <ClInclude Include="src\VertexStandard.h" />
     <ClInclude Include="src\VulkanWrapper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\DemoScene.cpp" />
     <ClCompile Include="src\framework.cpp" />
+    <ClCompile Include="src\MeshModel.cpp" />
     <ClCompile Include="src\scene.cpp" />
     <ClCompile Include="src\ShaderLoader.cpp" />
     <ClCompile Include="src\TextureLoader.cpp" />

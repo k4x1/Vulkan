@@ -64,13 +64,13 @@ protected:
 	// Main update function takes place before drawing, should update uniform buffer memory if anything is changing
 	virtual void update(float dt, void* uniform_memory_ptr) = 0;
 	
-private:
+protected:
 	bool is_prepared() const { return prepared; }
     void acquire_frame(uint32_t& width, uint32_t& height, bool& is_minimized, const bool& force_errors);
 	void draw();
 	void present(uint32_t &width, uint32_t &height, bool &is_minimized, const bool &force_errors);
 
-private:
+protected:
 	vk::Bool32 check_layers(const std::vector<const char *> &check_names, const std::vector<vk::LayerProperties> &layers);
 	void create_surface();
 	void create_device();

@@ -1,3 +1,4 @@
+#include "VertexStandard.h" 
 static std::array<VertexStandard, 36> demo_cube = {
     // -X side
 	VertexStandard({-1.0f,-1.0f,-1.0f}, {0.0f, 1.0f}),
