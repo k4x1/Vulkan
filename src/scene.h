@@ -3,6 +3,7 @@
 #include "common.h"
 #include "TextureLoader.h"
 #include "scene_data.h"
+#include "MeshModel.h"
 
 // Originally named: SwapchainImageResources, holds data required by frames-in-flight hence renamed to FrameResources
 // The number of FrameResources is the number of Swapchain images.
@@ -64,13 +65,13 @@ protected:
 	// Main update function takes place before drawing, should update uniform buffer memory if anything is changing
 	virtual void update(float dt, void* uniform_memory_ptr) = 0;
 	
-private:
+protected:
 	bool is_prepared() const { return prepared; }
     void acquire_frame(uint32_t& width, uint32_t& height, bool& is_minimized, const bool& force_errors);
 	void draw();
 	void present(uint32_t &width, uint32_t &height, bool &is_minimized, const bool &force_errors);
 
-private:
+protected:
 	vk::Bool32 check_layers(const std::vector<const char *> &check_names, const std::vector<vk::LayerProperties> &layers);
 	void create_surface();
 	void create_device();
@@ -134,11 +135,6 @@ private:
 	vk::SwapchainKHR 						swapchain;
 	std::vector<FrameResources> 			frame_resources;
 
-	vk::CommandPool			cmd_pool;
-	vk::CommandPool			present_cmd_pool;
-
-	vk::CommandBuffer		cmd;  // Buffer for initialization commands
-	vk::DescriptorSetLayout desc_layout;
 
 	vk::DescriptorPool		desc_pool;
 	vk::DescriptorSet		desc_set;
@@ -157,6 +153,12 @@ private:
 
 
 protected:
+	vk::CommandPool			cmd_pool;
+	vk::CommandPool			present_cmd_pool;
+
+	vk::CommandBuffer		cmd;  // Buffer for initialization commands
+	vk::DescriptorSetLayout desc_layout;
+
     vk::Device			device;
     vk::PhysicalDevice	gpu;
 

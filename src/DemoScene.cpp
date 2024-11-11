@@ -49,14 +49,23 @@ void DemoScene::init_scene()
     // Setup scene data
     spin_speed = 40.0f;
     spin_control = 120.0f;
+    m_model = std::make_unique<MeshModel>(
+        device,                    // vk::Device
+        gpu,                      // vk::PhysicalDevice
+        cmd_pool,                 // vk::CommandPool
+        graphics_queue,           // vk::Queue
+        glm::vec3(0.0f),         // position
+        glm::vec3(0.0f),         // rotation
+        glm::vec3(1.0f),         // scale
+        "Resources/Models/AncientEmpire/SM_Prop_Statue_01.obj"  // model path
+    );
 
+    // Setup scene data
     projection_matrix = glm::perspective(glm::radians(45.0f), aspect_ratio, 0.1f, 100.0f);
     view_matrix = glm::lookAt(eye, origin, up);
     model_matrix = glm::mat4(1.0f);
 
-    // Flip Y-coordinate to convert from OpenGL to Vulkan:
-    // * OpenGL clip space coord origin = bottom left
-    // * Vulkan clip space coord origin = top left
+    // Flip Y-coordinate to convert from OpenGL to Vulkan
     projection_matrix[1][1] *= -1.0f;
 }
 

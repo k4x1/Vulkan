@@ -161,28 +161,38 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\config.h" />
     <ClInclude Include="src\DemoCube.h" />
     <ClInclude Include="src\DemoScene.h" />
     <ClInclude Include="src\framework.h" />
     <ClInclude Include="src\gettime.h" />
+    <ClInclude Include="src\MeshModel.h" />
     <ClInclude Include="src\scene.h" />
     <ClInclude Include="src\scene_data.h" />
     <ClInclude Include="src\ShaderLoader.h" />
     <ClInclude Include="src\TextureLoader.h" />
+    <ClInclude Include="src\TinyObjConfig.h" />
+    <ClInclude Include="src\Utils.h" />
+    <ClInclude Include="src\VertexStandard.h" />
     <ClInclude Include="src\VulkanWrapper.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\DemoScene.cpp" />
     <ClCompile Include="src\framework.cpp" />
+    <ClCompile Include="src\MeshModel.cpp" />
     <ClCompile Include="src\scene.cpp" />
     <ClCompile Include="src\ShaderLoader.cpp" />
     <ClCompile Include="src\TextureLoader.cpp" />
+    <ClCompile Include="src\Utils.cpp" />
     <ClCompile Include="src\vkcube.cpp" />
     <ClCompile Include="src\VulkanWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\meshTexture.frag" />
+    <None Include="shaders\meshTexture.vert" />
     <None Include="shaders\textured.frag" />
     <None Include="shaders\textured.vert" />
   </ItemGroup>
