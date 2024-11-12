@@ -19,7 +19,8 @@ static uint32_t FindMemoryType(vk::PhysicalDevice PhysDevice, uint32_t TypeFilte
 
 void DemoScene::cleanup_scene()
 {
- //   delete meshModel;
+    delete meshModel;
+    meshModel = nullptr;
     device.destroyBuffer(vertex_buffer);
     device.freeMemory(vertex_buffer_memory);
 }
@@ -50,6 +51,7 @@ void DemoScene::init_scene()
     memcpy(VertexData, demo_cube.data(), sizeof(VertexStandard) * demo_cube.size());
     device.unmapMemory(vertex_buffer_memory);
 
+  //  meshModels.emplace_back("resources/Models/SciFiSpace/SM_Ship_Fighter_02.obj", device, gpu, cmd_pool, graphics_queue);
     // Setup scene data
     spin_speed = 40.0f;
     spin_control = 120.0f;
@@ -62,6 +64,13 @@ void DemoScene::init_scene()
     // * OpenGL clip space coord origin = bottom left
     // * Vulkan clip space coord origin = top left
     projection_matrix[1][1] *= -1.0f;
+    meshModel = new MeshModel(
+        "Resources/Models/SciFiSpace/SM_Ship_Fighter_02.obj",
+        device,
+        gpu,
+        cmd_pool,
+        graphics_queue
+    );
 }
 
 void DemoScene::create_graphics_pipelines()
@@ -132,36 +141,29 @@ void DemoScene::create_graphics_pipelines()
     device.destroyShaderModule(frag_shader_module);
     device.destroyShaderModule(vert_shader_module);
 }
-
-void DemoScene::populate_command_buffer(const vk::CommandBuffer& commandBuffer, const FrameResources& frame, uint32_t width, uint32_t height)
-{
+void DemoScene::populate_command_buffer(const vk::CommandBuffer& commandBuffer, const FrameResources& frame, uint32_t width, uint32_t height) {
     // Populate the command buffer
-    vk::ClearValue const clearValues[2] = { vk::ClearColorValue(std::array<float, 4>({ { 0.2f, 0.2f, 0.2f, 0.2f } })),
-        vk::ClearDepthStencilValue(1.0f, 0u) };
-    
+    vk::ClearValue const clearValues[2] = {
+        vk::ClearColorValue(std::array<float, 4>({ { 0.2f, 0.2f, 0.2f, 0.2f } })),
+        vk::ClearDepthStencilValue(1.0f, 0u)
+    };
+
     commandBuffer.beginRenderPass(vk::RenderPassBeginInfo()
-                                      .setRenderPass(render_pass)
-                                      .setFramebuffer(frame.framebuffer)
-                                      .setRenderArea(vk::Rect2D(vk::Offset2D {}, vk::Extent2D(width, height)))
-                                      .setClearValueCount(2)
-                                      .setPClearValues(clearValues),
+        .setRenderPass(render_pass)
+        .setFramebuffer(frame.framebuffer)
+        .setRenderArea(vk::Rect2D(vk::Offset2D{}, vk::Extent2D(width, height)))
+        .setClearValueCount(2)
+        .setPClearValues(clearValues),
         vk::SubpassContents::eInline);
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline_layout, 0, frame.descriptor_set,
-        {});
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline_layout, 0, frame.descriptor_set, {});
 
     commandBuffer.setViewport(0, vk::Viewport().setX(0.0f).setY(0.0f).setWidth(static_cast<float>(width)).setHeight(static_cast<float>(height)).setMinDepth(0.0f).setMaxDepth(1.0f));
+    commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D{}, vk::Extent2D(width, height)));
 
-    commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D {}, vk::Extent2D(width, height)));
-    //commandBuffer.draw(12 * 3, 1, 0, 0);
-  //  meshModel = new MeshModel(device, gpu, cmd_pool, graphics_queue, glm::vec3(0), glm::vec3(0), glm::vec3(1), "path/to/your/model.obj");
-    vk::Buffer VertexBuffers[] = {vertex_buffer};
-    vk::DeviceSize Offsets[] = {0};
-    commandBuffer.bindVertexBuffers(0, VertexBuffers, Offsets);
 
-    commandBuffer.draw(static_cast<uint32_t>(demo_cube.size()), 1, 0, 0);
-  
+
     // Note that ending the renderpass changes the image's layout from
     // COLOR_ATTACHMENT_OPTIMAL to PRESENT_SRC_KHR
     commandBuffer.endRenderPass();
@@ -182,6 +184,7 @@ void DemoScene::new_frame() {
 
 void DemoScene::update(float dt, void* uniform_memory_ptr)
 {
+   
    
     // Process input
     if (glfwGetKey(window_handle, GLFW_KEY_ESCAPE)) {

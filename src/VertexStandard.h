@@ -43,7 +43,4 @@ public:
         return attributeDescriptions;
     }
 
-    bool operator==(const VertexStandard& other) const {
-        return Position == other.Position && Normal == other.Normal && TexCoord == other.TexCoord;
-    }
 };

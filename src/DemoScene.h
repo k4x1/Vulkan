@@ -97,7 +97,7 @@ protected:
 private:
     // Staging uniform data, will be copied to device-mapped memory ptr to update uniform data
     UBO_Textured uniform_data;
-  //  MeshModel* meshModel;
+    MeshModel* meshModel;
     vk::Buffer          vertex_buffer;
     vk::DeviceMemory    vertex_buffer_memory;
 
