@@ -57,14 +57,15 @@ void DemoScene::init_scene()
     // Load the model using ModelLoader
     std::vector<VertexStandard> meshVertices = ModelLoader::LoadModel("resources/Models/AncientEmpire/SM_Prop_Statue_01.obj", device, gpu, mesh_vertex_buffer, mesh_vertex_buffer_memory);
     this->meshVertices = meshVertices;
-
+    mesh_model_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1000.0f, -1000.0f)); 
     // Setup scene data
     spin_speed = 40.0f;
     spin_control = 120.0f;
 
     projection_matrix = glm::perspective(glm::radians(45.0f), aspect_ratio, 0.1f, 100.0f);
     view_matrix = glm::lookAt(eye, origin, up);
-    model_matrix = glm::mat4(1.0f);
+    model_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(-0, -0, -500.0f));
+
 
     // Flip Y-coordinate to convert from OpenGL to Vulkan:
     projection_matrix[1][1] *= -1.0f;
@@ -169,6 +170,11 @@ void DemoScene::populate_command_buffer(const vk::CommandBuffer& commandBuffer, 
     commandBuffer.bindVertexBuffers(0, cubeVertexBuffers, cubeOffsets);
     commandBuffer.draw(static_cast<uint32_t>(demo_cube.size()), 1, 0, 0);
 
+    // Update uniform data for the mesh
+    uniform_data.model = mesh_model_matrix;
+    uniform_data.viewproj = projection_matrix * view_matrix;
+    memcpy(frame.uniform_memory_ptr, &uniform_data, sizeof(UBO_Textured));
+
     // Draw the loaded mesh
     vk::Buffer meshVertexBuffers[] = { mesh_vertex_buffer };
     vk::DeviceSize meshOffsets[] = { 0 };
@@ -178,12 +184,14 @@ void DemoScene::populate_command_buffer(const vk::CommandBuffer& commandBuffer, 
     commandBuffer.endRenderPass();
 }
 
-
 std::pair<void*, size_t> DemoScene::create_uniform_data()
 {
     uniform_data.model = model_matrix;
     uniform_data.viewproj = projection_matrix * view_matrix;
-    //    dumpMatrix("MVP", MVP)
+
+    UBO_Textured mesh_uniform_data;
+    mesh_uniform_data.model = mesh_model_matrix;
+    mesh_uniform_data.viewproj = projection_matrix * view_matrix;
 
     return std::make_pair(&uniform_data, sizeof uniform_data);
 }
@@ -224,7 +232,7 @@ void DemoScene::update(float dt, void* uniform_memory_ptr)
     }
 
     // Recalculate projection matrix to handle window resize
-    projection_matrix = glm::perspective(glm::radians(45.0f), aspect_ratio, 0.1f, 100.0f);
+    projection_matrix = glm::perspective(glm::radians(45.0f), aspect_ratio, 0.1f, 10000.0f);
     // GLM projection is OpenGL format, flip Y to convert to Vulkan
     projection_matrix[1][1] *= -1.0f;
 
