@@ -4,6 +4,7 @@
 layout(location = 0) in VS_OUT
 {
     vec3 pos;
+    vec3 normal;
     vec2 texcoord;
 } ps_in;
 

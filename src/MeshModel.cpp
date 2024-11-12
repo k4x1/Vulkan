@@ -7,6 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "VertexStandard.h"
+#include <unordered_map>
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <TINY/tiny_obj_loader.h>
 
@@ -69,7 +70,6 @@ void MeshModel::UpdateUniformBuffer(vk::DeviceMemory uniformMemory, const glm::m
     memcpy(data, glm::value_ptr(modelMatrix), sizeof(glm::mat4));
     m_device.unmapMemory(uniformMemory);
 }
-
 void MeshModel::LoadModel(const std::string& modelFilePath) {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -82,7 +82,6 @@ void MeshModel::LoadModel(const std::string& modelFilePath) {
 
     std::vector<VertexStandard> vertices;
     std::vector<uint32_t> indices;
-    std::unordered_map<VertexStandard, uint32_t> uniqueVertices;
 
     for (const auto& shape : shapes) {
         for (const auto& index : shape.mesh.indices) {
@@ -109,12 +108,15 @@ void MeshModel::LoadModel(const std::string& modelFilePath) {
                 };
             }
 
-            if (uniqueVertices.count(vertex) == 0) {
-                uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
-                vertices.push_back(vertex);
+            // Linear search to find if the vertex already exists
+            auto it = std::find(vertices.begin(), vertices.end(), vertex);
+            if (it != vertices.end()) {
+                indices.push_back(static_cast<uint32_t>(std::distance(vertices.begin(), it)));
             }
-
-            indices.push_back(uniqueVertices[vertex]);
+            else {
+                vertices.push_back(vertex);
+                indices.push_back(static_cast<uint32_t>(vertices.size() - 1));
+            }
         }
     }
 

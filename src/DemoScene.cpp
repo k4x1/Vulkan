@@ -1,7 +1,7 @@
 #include "DemoScene.h"
 #include "ShaderLoader.h"
 #include "DemoCube.h"
-MeshModel* meshModel = nullptr;
+
 
 static uint32_t FindMemoryType(vk::PhysicalDevice PhysDevice, uint32_t TypeFilter, vk::MemoryPropertyFlags Properties)
 {
@@ -19,14 +19,14 @@ static uint32_t FindMemoryType(vk::PhysicalDevice PhysDevice, uint32_t TypeFilte
 
 void DemoScene::cleanup_scene()
 {
-    delete meshModel;
+ //   delete meshModel;
     device.destroyBuffer(vertex_buffer);
     device.freeMemory(vertex_buffer_memory);
 }
 
 void DemoScene::init_scene()
 {
-    meshModel = new MeshModel(device, gpu, cmd_pool, graphics_queue, glm::vec3(0), glm::vec3(0), glm::vec3(1), "path/to/your/model.obj");
+ 
 
     // Create vertex buffer
     vk::BufferCreateInfo bufferInfo = vk::BufferCreateInfo().setSize(sizeof(VertexStandard) * demo_cube.size()).setUsage(vk::BufferUsageFlagBits::eVertexBuffer);
@@ -155,7 +155,7 @@ void DemoScene::populate_command_buffer(const vk::CommandBuffer& commandBuffer, 
 
     commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D {}, vk::Extent2D(width, height)));
     //commandBuffer.draw(12 * 3, 1, 0, 0);
-    meshModel = new MeshModel(device, gpu, cmd_pool, graphics_queue, glm::vec3(0), glm::vec3(0), glm::vec3(1), "path/to/your/model.obj");
+  //  meshModel = new MeshModel(device, gpu, cmd_pool, graphics_queue, glm::vec3(0), glm::vec3(0), glm::vec3(1), "path/to/your/model.obj");
     vk::Buffer VertexBuffers[] = {vertex_buffer};
     vk::DeviceSize Offsets[] = {0};
     commandBuffer.bindVertexBuffers(0, VertexBuffers, Offsets);
@@ -182,7 +182,7 @@ void DemoScene::new_frame() {
 
 void DemoScene::update(float dt, void* uniform_memory_ptr)
 {
-    meshModel->Update(dt);
+   
     // Process input
     if (glfwGetKey(window_handle, GLFW_KEY_ESCAPE)) {
         glfwSetWindowShouldClose(window_handle, true);
