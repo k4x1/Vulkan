@@ -14,7 +14,7 @@ void MeshModel::render(const vk::CommandBuffer& commandBuffer) {
     commandBuffer.draw(static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 }
 
-void MeshModel::updateUniformData(glm::mat4 modelMatrix, glm::mat4 viewProjMatrix, void* uniformMemoryPtr) {
+void MeshModel::updateUniformData(glm::mat4 viewProjMatrix, void* uniformMemoryPtr) {
     UBO_Textured uniformData;
     uniformData.model = modelMatrix;
     uniformData.viewproj = viewProjMatrix;
@@ -28,12 +28,10 @@ void MeshModel::loadVBO(vk::Device& device, vk::PhysicalDevice& physicalDevice)
 
     vk::BufferCreateInfo bufferInfo = vk::BufferCreateInfo().setSize(bufferSize).setUsage(vk::BufferUsageFlagBits::eVertexBuffer);
     
-    std::cout << &vertexBuffer << std::endl;
 
     if (device.createBuffer(&bufferInfo, nullptr, &vertexBuffer) != vk::Result::eSuccess) {
         throw std::runtime_error("Failed to create vertex buffer!");
     }
-    std::cout << "post Buffer" << std::endl;
 
     vk::MemoryRequirements memRequirements;
     device.getBufferMemoryRequirements(vertexBuffer, &memRequirements);
@@ -54,6 +52,25 @@ void MeshModel::loadVBO(vk::Device& device, vk::PhysicalDevice& physicalDevice)
     device.unmapMemory(vertexBufferMemory);
 
 }
+
+
+void MeshModel::setModelMatrix(glm::vec3 scale, glm::vec3 translation, glm::vec3 rotation) {
+
+    glm::mat4 newModelMatrix = glm::mat4(1.0f);
+
+    newModelMatrix = glm::scale(newModelMatrix, scale);
+
+    newModelMatrix = glm::rotate(newModelMatrix, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+
+    newModelMatrix = glm::rotate(newModelMatrix, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    newModelMatrix = glm::rotate(newModelMatrix, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    newModelMatrix = glm::translate(newModelMatrix, translation);
+
+    modelMatrix = newModelMatrix;
+}
+
 
 void MeshModel::cleanup(vk::Device& device, vk::PhysicalDevice& physicalDevice) {
     device.destroyBuffer(vertexBuffer);

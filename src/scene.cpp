@@ -581,7 +581,7 @@ void Scene::frame(float dt, uint32_t& width, uint32_t& height, bool& is_minimize
 
 	if (is_prepared()) {
 		acquire_frame(width, height, is_minimized, force_errors);
-		update(scene_dt, frame_resources[current_buffer].uniform_memory_ptr);
+		update(scene_dt, frame_resources[current_buffer].uniform_memory_ptrs);
 		draw();
 		present(width, height, is_minimized, force_errors);
 	}
@@ -949,37 +949,40 @@ void Scene::prepare_textures() {
 }
 
 void Scene::prepare_uniform_data_buffers() {
-	auto [data, data_size] = create_uniform_data();
-
-	auto const buf_info = vk::BufferCreateInfo().setSize(data_size).setUsage(vk::BufferUsageFlagBits::eUniformBuffer);
+	auto const buf_info = vk::BufferCreateInfo().setSize(sizeof(UBO_Textured)).setUsage(vk::BufferUsageFlagBits::eUniformBuffer);
 
 	for (auto& frame : frame_resources) {
-		auto result = device.createBuffer(&buf_info, nullptr, &frame.uniform_buffer);
-		VERIFY(result == vk::Result::eSuccess);
+		frame.uniform_buffers.resize(meshModels.size());
+		frame.uniform_memories.resize(meshModels.size());
+		frame.uniform_memory_ptrs.resize(meshModels.size());
 
-		vk::MemoryRequirements mem_reqs;
-		device.getBufferMemoryRequirements(frame.uniform_buffer, &mem_reqs);
+		for (size_t i = 0; i < meshModels.size(); ++i) {
+			auto result = device.createBuffer(&buf_info, nullptr, &frame.uniform_buffers[i]);
+			VERIFY(result == vk::Result::eSuccess);
 
-		auto mem_alloc = vk::MemoryAllocateInfo().setAllocationSize(mem_reqs.size).setMemoryTypeIndex(0);
+			vk::MemoryRequirements mem_reqs;
+			device.getBufferMemoryRequirements(frame.uniform_buffers[i], &mem_reqs);
 
-		bool const pass = MemoryTypeFromProperties(
-			mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-			mem_alloc.memoryTypeIndex);
-		VERIFY(pass);
+			auto mem_alloc = vk::MemoryAllocateInfo().setAllocationSize(mem_reqs.size).setMemoryTypeIndex(0);
 
-		result = device.allocateMemory(&mem_alloc, nullptr, &frame.uniform_memory);
-		VERIFY(result == vk::Result::eSuccess);
+			bool const pass = MemoryTypeFromProperties(
+				mem_reqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+				mem_alloc.memoryTypeIndex);
+			VERIFY(pass);
 
-		result = device.mapMemory(frame.uniform_memory, 0, VK_WHOLE_SIZE, vk::MemoryMapFlags(),
-			&frame.uniform_memory_ptr);
-		VERIFY(result == vk::Result::eSuccess);
+			result = device.allocateMemory(&mem_alloc, nullptr, &frame.uniform_memories[i]);
+			VERIFY(result == vk::Result::eSuccess);
 
-		memcpy(frame.uniform_memory_ptr, data, data_size);
+			result = device.mapMemory(frame.uniform_memories[i], 0, VK_WHOLE_SIZE, vk::MemoryMapFlags(),
+				&frame.uniform_memory_ptrs[i]);
+			VERIFY(result == vk::Result::eSuccess);
 
-		result = device.bindBufferMemory(frame.uniform_buffer, frame.uniform_memory, 0);
-		VERIFY(result == vk::Result::eSuccess);
+			result = device.bindBufferMemory(frame.uniform_buffers[i], frame.uniform_memories[i], 0);
+			VERIFY(result == vk::Result::eSuccess);
+		}
 	}
 }
+
 
 void Scene::prepare_descriptor_layout() {
 	std::array<vk::DescriptorSetLayoutBinding, 2> const layout_bindings = {
@@ -1077,49 +1080,89 @@ void Scene::prepare_pipeline() {
 }
 
 void Scene::prepare_descriptor_pool() {
-	std::array<vk::DescriptorPoolSize, 2> const poolSizes = {
+	const uint32_t total_sets = static_cast<uint32_t>(frame_resources.size()) * meshModels.size();
+
+	std::array<vk::DescriptorPoolSize, 3> poolSizes = {
 		vk::DescriptorPoolSize()
 			.setType(vk::DescriptorType::eUniformBuffer)
 			.setDescriptorCount(static_cast<uint32_t>(frame_resources.size())),
 		vk::DescriptorPoolSize()
 			.setType(vk::DescriptorType::eCombinedImageSampler)
-			.setDescriptorCount(static_cast<uint32_t>(frame_resources.size()) * texture_count) };
+			.setDescriptorCount(static_cast<uint32_t>(total_sets)),
+		vk::DescriptorPoolSize()
+			.setType(vk::DescriptorType::eUniformBuffer)
+			.setDescriptorCount(static_cast<uint32_t>(frame_resources.size()))
+	};
 
-	auto const descriptor_pool =
-		vk::DescriptorPoolCreateInfo().setMaxSets(static_cast<uint32_t>(frame_resources.size())).setPoolSizes(poolSizes);
+	vk::DescriptorPoolCreateInfo descriptor_pool_info;
+	descriptor_pool_info.setMaxSets(total_sets)
+		.setPoolSizes(poolSizes);
 
-	auto result = device.createDescriptorPool(&descriptor_pool, nullptr, &desc_pool);
+	// Create the descriptor pool
+	auto result = device.createDescriptorPool(&descriptor_pool_info, nullptr, &desc_pool);
 	VERIFY(result == vk::Result::eSuccess);
 }
 
+
 void Scene::prepare_descriptor_set() {
-	auto const alloc_info = vk::DescriptorSetAllocateInfo().setDescriptorPool(desc_pool).setSetLayouts(desc_layout);
+	// Ensure desc_pool and desc_layout are properly initialized
+	if (!desc_pool) {
+		std::cerr << "Descriptor pool or layout not initialized properly." << std::endl;
+	}
 
-	auto buffer_info = vk::DescriptorBufferInfo().setOffset(0).setRange(get_uniform_buffer_size());
+	// Allocate descriptor sets
+	vk::DescriptorSetAllocateInfo alloc_info;
+	alloc_info.setDescriptorPool(desc_pool)
+		.setDescriptorSetCount(1)  // Allocate one descriptor set per game object
+		.setPSetLayouts(&desc_layout); // Use the correct descriptor set layout
 
+	// Prepare buffer info
+	vk::DescriptorBufferInfo buffer_info;
+	buffer_info.setOffset(0).setRange(get_uniform_buffer_size());
+
+	// Prepare image descriptors
 	std::array<vk::DescriptorImageInfo, texture_count> tex_descs;
 	for (uint32_t i = 0; i < texture_count; i++) {
+		if (i >= textures.size()) {
+			std::cerr << "Texture index out of range: " << i << std::endl;
+			return;
+		}
 		tex_descs[i].setSampler(textures[i].sampler);
 		tex_descs[i].setImageView(textures[i].view);
 		tex_descs[i].setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 	}
 
-	std::array<vk::WriteDescriptorSet, 2> writes;
-	writes[0].setDescriptorCount(1).setDescriptorType(vk::DescriptorType::eUniformBuffer).setPBufferInfo(&buffer_info);
-	writes[1]
-		.setDstBinding(1)
-		.setDescriptorCount(texture_count)
-		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-		.setImageInfo(tex_descs);
-
+	// Iterate over frame resources
 	for (auto& frame : frame_resources) {
-		auto result = device.allocateDescriptorSets(&alloc_info, &frame.descriptor_set);
-		VERIFY(result == vk::Result::eSuccess);
+		// Resize descriptor sets to match uniform buffers
+		frame.descriptor_sets.resize(frame.uniform_buffers.size());
 
-		buffer_info.setBuffer(frame.uniform_buffer);
-		writes[0].setDstSet(frame.descriptor_set);
-		writes[1].setDstSet(frame.descriptor_set);
-		device.updateDescriptorSets(writes, {});
+		for (size_t i = 0; i < frame.uniform_buffers.size(); i++) {
+			std::array<vk::WriteDescriptorSet, 2> writes;
+			writes[0].setDescriptorCount(1)
+				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+				.setPBufferInfo(&buffer_info);
+
+			writes[1].setDstBinding(1)
+				.setDescriptorCount(texture_count)
+				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+				.setPImageInfo(tex_descs.data());
+
+			vk::DescriptorSet descriptor_set;
+			auto result = device.allocateDescriptorSets(&alloc_info, &descriptor_set);
+			if (result != vk::Result::eSuccess) {
+				std::cerr << "Failed to allocate descriptor sets: " << vk::to_string(result) << std::endl;
+			}
+
+			// Assign the descriptor set to the correct index
+			frame.descriptor_sets[i] = descriptor_set;
+			buffer_info.setBuffer(frame.uniform_buffers[i]);
+
+			writes[0].setDstSet(frame.descriptor_sets[i]);
+			writes[1].setDstSet(frame.descriptor_sets[i]);
+
+			device.updateDescriptorSets(static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
+		}
 	}
 }
 
@@ -1253,9 +1296,11 @@ void Scene::destroy_frame_resources() {
 		device.destroyFramebuffer(resource.framebuffer);
 		device.destroyImageView(resource.view);
 		device.freeCommandBuffers(cmd_pool, { resource.cmd });
-		device.destroyBuffer(resource.uniform_buffer);
-		device.unmapMemory(resource.uniform_memory);
-		device.freeMemory(resource.uniform_memory);
+		for (size_t i = 0; i < resource.uniform_buffers.size(); ++i) {
+			device.destroyBuffer(resource.uniform_buffers[i]);
+			device.unmapMemory(resource.uniform_memories[i]);
+			device.freeMemory(resource.uniform_memories[i]);
+		}
 	}
 
 	device.destroyCommandPool(cmd_pool);

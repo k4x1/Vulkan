@@ -18,13 +18,24 @@ static uint32_t FindMemoryType(vk::PhysicalDevice PhysDevice, uint32_t TypeFilte
 }
 
 void DemoScene::cleanup_scene() {
-    meshModel->cleanup(device, gpu);
+    for (auto& model : meshModels) {
+        model->cleanup(device, gpu);
+    }
+
 }
 
 void DemoScene::init_scene() {
-    meshModel = std::make_unique<MeshModel>();
-    meshModel->loadModel("resources/Models/AncientEmpire/SM_Prop_Statue_01.obj");
-    meshModel->loadVBO(device, gpu);
+    for (int i = 0; i < 2; i++){
+        meshModels.push_back(std::make_unique<MeshModel>());
+        meshModels[i]->loadModel("resources/Models/AncientEmpire/SM_Prop_Statue_01.obj");
+        meshModels[i]->loadVBO(device, gpu);
+    }
+    meshModels[0]->setModelMatrix(glm::vec3(0.01f),
+        glm::vec3(0, 0, -20),
+        glm::vec3(0));
+    meshModels[1]->setModelMatrix(glm::vec3(0.01f),
+        glm::vec3(0, 0, 20),
+        glm::vec3(0));
 
     // Setup scene data
     spin_speed = 40.0f;
@@ -122,40 +133,45 @@ void DemoScene::populate_command_buffer(const vk::CommandBuffer& commandBuffer, 
 
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
 
-    // Bind descriptor sets
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline_layout, 0, frame.descriptor_set, {});
-
     // Set viewport
     commandBuffer.setViewport(0, vk::Viewport().setX(0.0f).setY(0.0f).setWidth(static_cast<float>(width)).setHeight(static_cast<float>(height)).setMinDepth(0.0f).setMaxDepth(1.0f));
 
     // Set scissor
     commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D{}, vk::Extent2D(width, height)));
 
-    // Update uniform data for the mesh
-    meshModel->updateUniformData(mesh_model_matrix, projection_matrix * view_matrix, frame.uniform_memory_ptr);
+  
+  
 
     // Draw the loaded mesh
-    meshModel->render(commandBuffer);
+    for (int i = 0; i < meshModels.size(); i++)
+    {
+        // Bind descriptor sets
+        std::cout << frame.descriptor_sets.size() << "|" << meshModels.size() << std::endl;
+
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline_layout, 0, frame.descriptor_sets[i], {});
+        meshModels[i]->render(commandBuffer);
+    }
 
     commandBuffer.endRenderPass();
 }
 std::pair<void*, size_t> DemoScene::create_uniform_data()
 {
-    uniform_data.model = *meshModel->GetModelMat();
-    uniform_data.viewproj = projection_matrix * view_matrix;
+    //uniform_data.model = *meshModel->GetModelMat();
+    //uniform_data.viewproj = projection_matrix * view_matrix;
 
-    UBO_Textured mesh_uniform_data;
-    mesh_uniform_data.model = *meshModel->GetModelMat();
-    mesh_uniform_data.viewproj = projection_matrix * view_matrix;
+    //UBO_Textured mesh_uniform_data;
+    //mesh_uniform_data.model = *meshModel->GetModelMat();
+    //mesh_uniform_data.viewproj = projection_matrix * view_matrix;
 
-    return std::make_pair(&uniform_data, sizeof uniform_data);
+    //return std::make_pair(&uniform_data, sizeof uniform_data);
+    return  std::make_pair(&uniform_data, sizeof uniform_data);
 }
 
 void DemoScene::new_frame() {
     controls.on_new_frame();
 }
 
-void DemoScene::update(float dt, void* uniform_memory_ptr)
+void DemoScene::update(float dt, std::vector<void*> uniform_memory_ptrs)
 {
     // Process input
     if (glfwGetKey(window_handle, GLFW_KEY_ESCAPE)) {
@@ -206,8 +222,12 @@ void DemoScene::update(float dt, void* uniform_memory_ptr)
     model_matrix[2] = glm::vec4(zAxis, 0.0f);
 
     uniform_data.model = model_matrix;
-    uniform_data.viewproj = VP;
+    uniform_data.viewproj = VP;  // Update uniform data for the mesh
 
+    for (int i = 0; i< meshModels.size() ; i++)
+    {
+        meshModels[i]->updateUniformData(projection_matrix * view_matrix, uniform_memory_ptrs[i]);
+    }
+    //memcpy(uniform_memory_ptrs[i], &uniform_data, sizeof(UBO_Textured));
     // Update mapped memory with uniform_data
-    memcpy(uniform_memory_ptr, &uniform_data, sizeof(UBO_Textured));
 }

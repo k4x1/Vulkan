@@ -3,7 +3,8 @@
 #include "common.h"
 #include "TextureLoader.h"
 #include "scene_data.h"
-
+#include "VertexStandard.h"
+#include "MeshModel.h"
 // Originally named: SwapchainImageResources, holds data required by frames-in-flight hence renamed to FrameResources
 // The number of FrameResources is the number of Swapchain images.
 // we do this to allow multiple frames to be processed and rendered to at the same time to minimize host idling as much
@@ -13,11 +14,11 @@ struct FrameResources {
 	vk::CommandBuffer cmd;
 	vk::CommandBuffer graphics_to_present_cmd;
 	vk::ImageView view;
-	vk::Buffer uniform_buffer;
-	vk::DeviceMemory uniform_memory;
-	void *uniform_memory_ptr = nullptr;
+	std::vector<vk::Buffer> uniform_buffers;
+	std::vector <vk::DeviceMemory> uniform_memories;
+	std::vector<void*> uniform_memory_ptrs;
 	vk::Framebuffer framebuffer;
-	vk::DescriptorSet descriptor_set;
+	std::vector<vk::DescriptorSet> descriptor_sets;
 };
 
 struct DepthBuffer {
@@ -62,7 +63,7 @@ protected:
 	// Called at start of a new frame for any preliminary code
 	virtual void new_frame() {}
 	// Main update function takes place before drawing, should update uniform buffer memory if anything is changing
-	virtual void update(float dt, void* uniform_memory_ptr) = 0;
+	virtual void update(float dt,std::vector<void*> uniform_memory_ptrs) = 0;
 	
 protected:
 	bool is_prepared() const { return prepared; }
@@ -116,6 +117,8 @@ protected:
 	bool invalid_gpu_selection = false;
 	bool in_callback = false;
 	bool prepared = false;
+
+	std::vector<std::unique_ptr<MeshModel>> meshModels;
 
 	vk::Instance 							inst;
 	vk::DebugUtilsMessengerEXT 				debug_messenger;

@@ -1,9 +1,7 @@
 #pragma once
 
 #include "scene.h"
-#include "VertexStandard.h"
 #include <vector>
-#include "MeshModel.h"
 #include <memory>
 
 // Input structure
@@ -40,7 +38,7 @@ protected:
     virtual std::pair<void*, size_t> create_uniform_data() override;
     virtual size_t get_uniform_buffer_size() override { return sizeof UBO_Textured; }
     virtual void new_frame() override;
-    virtual void update(float dt, void* uniform_memory_ptr) override;
+    virtual void update(float dt, std::vector<void*> uniform_memory_ptrs) override;
 
 private:
     // Staging uniform data, will be copied to device-mapped memory ptr to update uniform data
@@ -73,7 +71,5 @@ private:
     glm::mat4 model_matrix = {};
     glm::mat4 view_matrix = {};
     glm::mat4 projection_matrix = {};
-
-    std::unique_ptr<MeshModel> meshModel;
 
 };
