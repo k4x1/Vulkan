@@ -23,7 +23,8 @@ void DemoScene::cleanup_scene() {
 
 void DemoScene::init_scene() {
     meshModel = std::make_unique<MeshModel>();
-    meshModel->loadModel("resources/Models/AncientEmpire/SM_Prop_Statue_01.obj", device, gpu);
+    meshModel->loadModel("resources/Models/AncientEmpire/SM_Prop_Statue_01.obj");
+    meshModel->loadVBO(device, gpu);
 
     // Setup scene data
     spin_speed = 40.0f;
@@ -140,11 +141,11 @@ void DemoScene::populate_command_buffer(const vk::CommandBuffer& commandBuffer, 
 }
 std::pair<void*, size_t> DemoScene::create_uniform_data()
 {
-    uniform_data.model = model_matrix;
+    uniform_data.model = *meshModel->GetModelMat();
     uniform_data.viewproj = projection_matrix * view_matrix;
 
     UBO_Textured mesh_uniform_data;
-    mesh_uniform_data.model = mesh_model_matrix;
+    mesh_uniform_data.model = *meshModel->GetModelMat();
     mesh_uniform_data.viewproj = projection_matrix * view_matrix;
 
     return std::make_pair(&uniform_data, sizeof uniform_data);

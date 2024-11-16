@@ -363,6 +363,7 @@ void Scene::prepare(uint32_t& width, uint32_t& height, bool& is_minimized, const
 	prepare_depth(width, height, force_errors);
 
 	prepare_textures();
+	init_scene();
 	prepare_uniform_data_buffers();
 
 	prepare_descriptor_layout();
@@ -400,7 +401,6 @@ void Scene::prepare(uint32_t& width, uint32_t& height, bool& is_minimized, const
 
 	prepare_framebuffers(width, height);
 
-	init_scene();
 
 	for (const auto& frame : frame_resources) {
 		draw_build_cmd(frame, width, height);

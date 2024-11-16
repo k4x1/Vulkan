@@ -1,14 +1,14 @@
 #pragma once
 //#define TINYOBJLOADER_IMPLEMENTATION
 #include <TINY/tiny_obj_loader.h>
-#include <vulkan/vulkan.hpp>
+#include "common.h"
 #include "VertexStandard.h"
 #include <vector>
 #include <iostream>
 
 class ModelLoader {
 public:
-    static std::vector<VertexStandard> LoadModel(const std::string& filepath, vk::Device& device, vk::PhysicalDevice& physicalDevice, vk::Buffer& vertexBuffer, vk::DeviceMemory& vertexBufferMemory) {
+    static std::vector<VertexStandard> LoadModel(const std::string& filepath) {
         // Load OBJ file
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
@@ -42,43 +42,10 @@ public:
             }
         }
 
-        // Create VBO
-   
-        vk::DeviceSize bufferSize = sizeof(VertexStandard) * vertices.size();
-
-        vk::BufferCreateInfo bufferInfo = {};
-        bufferInfo.size = bufferSize;
-        bufferInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer;
-        bufferInfo.sharingMode = vk::SharingMode::eExclusive;
-
-        std::cout << &vertexBuffer << std::endl;
-        if (device.createBuffer(&bufferInfo, nullptr, &vertexBuffer) != vk::Result::eSuccess) {
-            throw std::runtime_error("Failed to create vertex buffer!");
-        }
-        std::cout << "post Buffer" << std::endl;
-
-        vk::MemoryRequirements memRequirements;
-        device.getBufferMemoryRequirements(vertexBuffer, &memRequirements);
-
-        vk::MemoryAllocateInfo allocInfo = {};
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = FindMemoryType(physicalDevice, memRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
-
-        if (device.allocateMemory(&allocInfo, nullptr, &vertexBufferMemory) != vk::Result::eSuccess) {
-            throw std::runtime_error("Failed to allocate vertex buffer memory!");
-        }
-
-        device.bindBufferMemory(vertexBuffer, vertexBufferMemory, 0);
-
-        void* data;
-        device.mapMemory(vertexBufferMemory, 0, bufferSize, {}, &data);
-        memcpy(data, vertices.data(), (size_t)bufferSize);
-        device.unmapMemory(vertexBufferMemory);
-
+       
         return vertices;
     }
 
-private:
     static uint32_t FindMemoryType(vk::PhysicalDevice physicalDevice, uint32_t typeFilter, vk::MemoryPropertyFlags properties) {
         vk::PhysicalDeviceMemoryProperties memProperties;
         physicalDevice.getMemoryProperties(&memProperties);
