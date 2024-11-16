@@ -8,18 +8,18 @@
 
 class MeshModel {
 public:
-    MeshModel(vk::Device dev, vk::PhysicalDevice phyDev);
+    MeshModel() = default;
       
 
-    void loadModel(const std::string& filepath);
+    void loadModel(const std::string& filepath, vk::Device& device, vk::PhysicalDevice& physicalDevice);
     void render(const vk::CommandBuffer& commandBuffer);
     void updateUniformData(glm::mat4 modelMatrix, glm::mat4 viewProjMatrix, void* uniformMemoryPtr);
 
-    void cleanup();
+    void cleanup(vk::Device& device, vk::PhysicalDevice& physicalDevice);
 
 private:
-    vk::Device device;
-    vk::PhysicalDevice physicalDevice;
+    vk::Device* device;
+    vk::PhysicalDevice* physicalDevice;
     vk::Buffer vertexBuffer;
     vk::DeviceMemory vertexBufferMemory;
     std::vector<VertexStandard> vertices;

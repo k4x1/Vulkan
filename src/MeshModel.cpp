@@ -1,15 +1,10 @@
 #include "MeshModel.h"
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <TINY/tiny_obj_loader.h>
-MeshModel::MeshModel(vk::Device dev, vk::PhysicalDevice phyDev)
-{
-    device = dev;
-    physicalDevice = phyDev;
-}
 
-void MeshModel::loadModel(const std::string& filepath) {
-    vertices = ModelLoader::LoadModel(filepath, device, physicalDevice, vertexBuffer, vertexBufferMemory);
+void MeshModel::loadModel(const std::string& filepath, vk::Device& device, vk::PhysicalDevice& physicalDevice) {
     modelMatrix = glm::mat4(1.0f); // Initialize model matrix
+    vertices = ModelLoader::LoadModel(filepath, device, physicalDevice, vertexBuffer, vertexBufferMemory);
 }
 
 void MeshModel::render(const vk::CommandBuffer& commandBuffer) {
@@ -26,7 +21,7 @@ void MeshModel::updateUniformData(glm::mat4 modelMatrix, glm::mat4 viewProjMatri
     memcpy(uniformMemoryPtr, &uniformData, sizeof(UBO_Textured));
 }
 
-void MeshModel::cleanup() {
+void MeshModel::cleanup(vk::Device& device, vk::PhysicalDevice& physicalDevice) {
     device.destroyBuffer(vertexBuffer);
     device.freeMemory(vertexBufferMemory);
 }

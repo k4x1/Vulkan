@@ -8,7 +8,7 @@
 
 class ModelLoader {
 public:
-    static std::vector<VertexStandard> LoadModel(const std::string& filepath, vk::Device device, vk::PhysicalDevice physicalDevice, vk::Buffer& vertexBuffer, vk::DeviceMemory& vertexBufferMemory) {
+    static std::vector<VertexStandard> LoadModel(const std::string& filepath, vk::Device& device, vk::PhysicalDevice& physicalDevice, vk::Buffer& vertexBuffer, vk::DeviceMemory& vertexBufferMemory) {
         // Load OBJ file
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
@@ -17,7 +17,7 @@ public:
 
         if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filepath.c_str())) {
             throw std::runtime_error(warn + err);
-        }
+        }   
 
         // Extract vertex data
         std::vector<VertexStandard> vertices;
@@ -43,16 +43,19 @@ public:
         }
 
         // Create VBO
-        vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+   
+        vk::DeviceSize bufferSize = sizeof(VertexStandard) * vertices.size();
 
         vk::BufferCreateInfo bufferInfo = {};
         bufferInfo.size = bufferSize;
         bufferInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer;
         bufferInfo.sharingMode = vk::SharingMode::eExclusive;
 
+        std::cout << &vertexBuffer << std::endl;
         if (device.createBuffer(&bufferInfo, nullptr, &vertexBuffer) != vk::Result::eSuccess) {
             throw std::runtime_error("Failed to create vertex buffer!");
         }
+        std::cout << "post Buffer" << std::endl;
 
         vk::MemoryRequirements memRequirements;
         device.getBufferMemoryRequirements(vertexBuffer, &memRequirements);

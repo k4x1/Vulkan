@@ -18,12 +18,12 @@ static uint32_t FindMemoryType(vk::PhysicalDevice PhysDevice, uint32_t TypeFilte
 }
 
 void DemoScene::cleanup_scene() {
-    meshModel->cleanup();
+    meshModel->cleanup(device, gpu);
 }
 
 void DemoScene::init_scene() {
-    meshModel = std::make_unique<MeshModel>(device, gpu);
-    meshModel->loadModel("resources/Models/AncientEmpire/SM_Prop_Statue_01.obj");
+    meshModel = std::make_unique<MeshModel>();
+    meshModel->loadModel("resources/Models/AncientEmpire/SM_Prop_Statue_01.obj", device, gpu);
 
     // Setup scene data
     spin_speed = 40.0f;
