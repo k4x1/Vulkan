@@ -180,6 +180,7 @@
     <ClCompile Include="src\DemoScene.cpp" />
     <ClCompile Include="src\framework.cpp" />
     <ClCompile Include="src\MeshModel.cpp" />
+    <ClCompile Include="src\ModelLoader.cpp" />
     <ClCompile Include="src\scene.cpp" />
     <ClCompile Include="src\ShaderLoader.cpp" />
     <ClCompile Include="src\TextureLoader.cpp" />
