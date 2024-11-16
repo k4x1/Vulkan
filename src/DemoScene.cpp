@@ -31,10 +31,10 @@ void DemoScene::init_scene() {
         meshModels[i]->loadVBO(device, gpu);
     }
     meshModels[0]->setModelMatrix(glm::vec3(0.01f),
-        glm::vec3(0, 0, -20),
+        glm::vec3(-200, -100, 0),
         glm::vec3(0));
     meshModels[1]->setModelMatrix(glm::vec3(0.01f),
-        glm::vec3(0, 0, 20),
+        glm::vec3(200, -100, 0),
         glm::vec3(0));
 
     // Setup scene data
@@ -146,7 +146,6 @@ void DemoScene::populate_command_buffer(const vk::CommandBuffer& commandBuffer, 
     for (int i = 0; i < meshModels.size(); i++)
     {
         // Bind descriptor sets
-        std::cout << frame.descriptor_sets.size() << "|" << meshModels.size() << std::endl;
 
         commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline_layout, 0, frame.descriptor_sets[i], {});
         meshModels[i]->render(commandBuffer);

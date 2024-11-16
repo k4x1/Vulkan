@@ -63,7 +63,7 @@ private:
     glm::mat4 mesh_model_matrix = glm::mat4(1.0f);
 
     // Camera
-    glm::vec3 eye{ 0.0f, -0.6f, 2.0f };
+    glm::vec3 eye{ 0.0f, -0.6f, 8.0f };
     glm::vec3 origin{ 0, 0, 0 };
     glm::vec3 up{ 0.0f, 1.0f, 0.0 };
 
