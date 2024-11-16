@@ -1,3 +1,5 @@
+#pragma once
+//#define TINYOBJLOADER_IMPLEMENTATION
 #include <TINY/tiny_obj_loader.h>
 #include <vulkan/vulkan.hpp>
 #include "VertexStandard.h"

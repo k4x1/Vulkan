@@ -1,7 +1,7 @@
 #include "DemoScene.h"
 #include "ShaderLoader.h"
 #include "DemoCube.h"
-#include "ModelLoader.h"
+
 
 static uint32_t FindMemoryType(vk::PhysicalDevice PhysDevice, uint32_t TypeFilter, vk::MemoryPropertyFlags Properties)
 {
@@ -17,47 +17,14 @@ static uint32_t FindMemoryType(vk::PhysicalDevice PhysDevice, uint32_t TypeFilte
     throw std::runtime_error("Failed to find a suitable memory type");
 }
 
-void DemoScene::cleanup_scene()
-{
-    device.destroyBuffer(vertex_buffer);
-    device.freeMemory(vertex_buffer_memory);
-
-    device.destroyBuffer(mesh_vertex_buffer);
-    device.freeMemory(mesh_vertex_buffer_memory);
+void DemoScene::cleanup_scene() {
+    meshModel->cleanup();
 }
 
-void DemoScene::init_scene()
-{
-    // Cube initialization
-    vk::BufferCreateInfo bufferInfo = vk::BufferCreateInfo()
-        .setSize(sizeof(VertexStandard) * demo_cube.size())
-        .setUsage(vk::BufferUsageFlagBits::eVertexBuffer);
+void DemoScene::init_scene() {
+    meshModel = std::make_unique<MeshModel>(device, gpu);
+    meshModel->loadModel("resources/Models/AncientEmpire/SM_Prop_Statue_01.obj");
 
-    auto result = device.createBuffer(&bufferInfo, nullptr, &vertex_buffer);
-    VERIFY(result == vk::Result::eSuccess);
-
-    vk::MemoryRequirements memRequirements = device.getBufferMemoryRequirements(vertex_buffer);
-    vk::MemoryAllocateInfo allocInfo = vk::MemoryAllocateInfo()
-        .setAllocationSize(memRequirements.size)
-        .setMemoryTypeIndex(FindMemoryType(gpu, memRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
-
-    result = device.allocateMemory(&allocInfo, nullptr, &vertex_buffer_memory);
-    VERIFY(result == vk::Result::eSuccess);
-
-    result = device.bindBufferMemory(vertex_buffer, vertex_buffer_memory, 0);
-    VERIFY(result == vk::Result::eSuccess);
-
-    void* VertexData;
-    result = device.mapMemory(vertex_buffer_memory, 0, VK_WHOLE_SIZE, vk::MemoryMapFlags(), &VertexData);
-    VERIFY(result == vk::Result::eSuccess);
-
-    memcpy(VertexData, demo_cube.data(), sizeof(VertexStandard) * demo_cube.size());
-    device.unmapMemory(vertex_buffer_memory);
-
-    // Load the model using ModelLoader
-    std::vector<VertexStandard> meshVertices = ModelLoader::LoadModel("resources/Models/AncientEmpire/SM_Prop_Statue_01.obj", device, gpu, mesh_vertex_buffer, mesh_vertex_buffer_memory);
-    this->meshVertices = meshVertices;
-    mesh_model_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1000.0f, -1000.0f)); 
     // Setup scene data
     spin_speed = 40.0f;
     spin_control = 120.0f;
@@ -65,7 +32,6 @@ void DemoScene::init_scene()
     projection_matrix = glm::perspective(glm::radians(45.0f), aspect_ratio, 0.1f, 100.0f);
     view_matrix = glm::lookAt(eye, origin, up);
     model_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(-0, -0, -500.0f));
-
 
     // Flip Y-coordinate to convert from OpenGL to Vulkan:
     projection_matrix[1][1] *= -1.0f;
@@ -140,8 +106,8 @@ void DemoScene::create_graphics_pipelines()
     device.destroyShaderModule(vert_shader_module);
 }
 
-void DemoScene::populate_command_buffer(const vk::CommandBuffer& commandBuffer, const FrameResources& frame, uint32_t width, uint32_t height)
-{
+
+void DemoScene::populate_command_buffer(const vk::CommandBuffer& commandBuffer, const FrameResources& frame, uint32_t width, uint32_t height) {
     vk::ClearValue const clearValues[2] = { vk::ClearColorValue(std::array<float, 4>({ { 0.2f, 0.2f, 0.2f, 0.2f } })),
         vk::ClearDepthStencilValue(1.0f, 0u) };
 
@@ -164,26 +130,14 @@ void DemoScene::populate_command_buffer(const vk::CommandBuffer& commandBuffer, 
     // Set scissor
     commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D{}, vk::Extent2D(width, height)));
 
-    // Draw the cube
-    vk::Buffer cubeVertexBuffers[] = { vertex_buffer };
-    vk::DeviceSize cubeOffsets[] = { 0 };
-    commandBuffer.bindVertexBuffers(0, cubeVertexBuffers, cubeOffsets);
-    commandBuffer.draw(static_cast<uint32_t>(demo_cube.size()), 1, 0, 0);
-
     // Update uniform data for the mesh
-    uniform_data.model = mesh_model_matrix;
-    uniform_data.viewproj = projection_matrix * view_matrix;
-    memcpy(frame.uniform_memory_ptr, &uniform_data, sizeof(UBO_Textured));
+    meshModel->updateUniformData(mesh_model_matrix, projection_matrix * view_matrix, frame.uniform_memory_ptr);
 
     // Draw the loaded mesh
-    vk::Buffer meshVertexBuffers[] = { mesh_vertex_buffer };
-    vk::DeviceSize meshOffsets[] = { 0 };
-    commandBuffer.bindVertexBuffers(0, meshVertexBuffers, meshOffsets);
-    commandBuffer.draw(static_cast<uint32_t>(meshVertices.size()), 1, 0, 0);
+    meshModel->render(commandBuffer);
 
     commandBuffer.endRenderPass();
 }
-
 std::pair<void*, size_t> DemoScene::create_uniform_data()
 {
     uniform_data.model = model_matrix;

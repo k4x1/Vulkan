@@ -3,11 +3,8 @@
 #include "scene.h"
 #include "VertexStandard.h"
 #include <vector>
-
-struct UBO_Textured {
-    glm::mat4 model;
-    glm::mat4 viewproj;
-};
+#include "MeshModel.h"
+#include <memory>
 
 // Input structure
 // key that isn't down or released has a value of 0
@@ -35,6 +32,7 @@ struct SceneControls {
 
 class DemoScene : public Scene {
 protected:
+    
     virtual void init_scene() override;
     virtual void cleanup_scene() override;
     virtual void create_graphics_pipelines() override;
@@ -75,4 +73,7 @@ private:
     glm::mat4 model_matrix = {};
     glm::mat4 view_matrix = {};
     glm::mat4 projection_matrix = {};
+
+    std::unique_ptr<MeshModel> meshModel;
+
 };

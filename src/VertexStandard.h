@@ -3,6 +3,11 @@
 #include <array>
 #include <vulkan/vulkan.hpp>
 
+
+struct UBO_Textured {
+    glm::mat4 model;
+    glm::mat4 viewproj;
+};
 struct VertexStandard {
 public:
     glm::vec3 Position;

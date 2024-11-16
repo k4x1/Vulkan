@@ -573,7 +573,6 @@ void Scene::finalize() {
 	inst.destroy();
 }
 
-
 void Scene::frame(float dt, uint32_t& width, uint32_t& height, bool& is_minimized, const bool& force_errors) {
 	// If we're puased, pass scene delta time = 0.0f
 	float scene_dt = pause ? 0.0f : dt;
@@ -587,7 +586,6 @@ void Scene::frame(float dt, uint32_t& width, uint32_t& height, bool& is_minimize
 		present(width, height, is_minimized, force_errors);
 	}
 }
-
 
 vk::Bool32 Scene::check_layers(const std::vector<const char*>& check_names, const std::vector<vk::LayerProperties>& layers) {
 	for (const auto& name : check_names) {
