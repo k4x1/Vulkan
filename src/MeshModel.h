@@ -23,6 +23,9 @@ private:
     vk::PhysicalDevice* physicalDevice;
     vk::Buffer vertexBuffer;
     vk::DeviceMemory vertexBufferMemory;
+    vk::Buffer indexBuffer;
+    vk::DeviceMemory indexBufferMemory;
     std::vector<VertexStandard> vertices;
+    std::vector<uint32_t> indices;
     glm::mat4 modelMatrix;
 };
