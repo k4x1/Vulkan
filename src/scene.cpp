@@ -985,7 +985,7 @@ void Scene::prepare_uniform_data_buffers() {
 
 
 void Scene::prepare_descriptor_layout() {
-	std::array<vk::DescriptorSetLayoutBinding, 2> const layout_bindings = {
+	std::array<vk::DescriptorSetLayoutBinding, 3> layout_bindings = {
 		vk::DescriptorSetLayoutBinding()
 			.setBinding(0)
 			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
@@ -997,7 +997,14 @@ void Scene::prepare_descriptor_layout() {
 			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
 			.setDescriptorCount(texture_count)
 			.setStageFlags(vk::ShaderStageFlagBits::eFragment)
-			.setPImmutableSamplers(nullptr) };
+			.setPImmutableSamplers(nullptr),
+		vk::DescriptorSetLayoutBinding()
+			.setBinding(2)
+			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+			.setDescriptorCount(1)
+			.setStageFlags(vk::ShaderStageFlagBits::eFragment)
+			.setPImmutableSamplers(nullptr)
+	};
 
 	auto const descriptor_layout = vk::DescriptorSetLayoutCreateInfo().setBindings(layout_bindings);
 
@@ -1009,6 +1016,7 @@ void Scene::prepare_descriptor_layout() {
 	result = device.createPipelineLayout(&pPipelineLayoutCreateInfo, nullptr, &pipeline_layout);
 	VERIFY(result == vk::Result::eSuccess);
 }
+
 
 void Scene::prepare_render_pass() {
 	// The initial layout for the color and depth attachments will be LAYOUT_UNDEFINED
@@ -1103,7 +1111,6 @@ void Scene::prepare_descriptor_pool() {
 	VERIFY(result == vk::Result::eSuccess);
 }
 
-
 void Scene::prepare_descriptor_set() {
 	// Ensure desc_pool and desc_layout are properly initialized
 	if (!desc_pool) {
@@ -1132,13 +1139,19 @@ void Scene::prepare_descriptor_set() {
 		tex_descs[i].setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 	}
 
+	// Prepare point light buffer info
+	vk::DescriptorBufferInfo pointLightBufferInfo;
+	pointLightBufferInfo.buffer = LightManager::GetInstance().getPointLightBuffer();
+	pointLightBufferInfo.offset = 0;
+	pointLightBufferInfo.range = sizeof(PointLightBufferData);
+
 	// Iterate over frame resources
 	for (auto& frame : frame_resources) {
 		// Resize descriptor sets to match uniform buffers
 		frame.descriptor_sets.resize(frame.uniform_buffers.size());
 
 		for (size_t i = 0; i < frame.uniform_buffers.size(); i++) {
-			std::array<vk::WriteDescriptorSet, 2> writes;
+			std::array<vk::WriteDescriptorSet, 3> writes;
 			writes[0].setDescriptorCount(1)
 				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
 				.setPBufferInfo(&buffer_info);
@@ -1147,6 +1160,11 @@ void Scene::prepare_descriptor_set() {
 				.setDescriptorCount(texture_count)
 				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
 				.setPImageInfo(tex_descs.data());
+
+			writes[2].setDstBinding(2)
+				.setDescriptorCount(1)
+				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+				.setPBufferInfo(&pointLightBufferInfo);
 
 			vk::DescriptorSet descriptor_set;
 			auto result = device.allocateDescriptorSets(&alloc_info, &descriptor_set);
@@ -1160,6 +1178,7 @@ void Scene::prepare_descriptor_set() {
 
 			writes[0].setDstSet(frame.descriptor_sets[i]);
 			writes[1].setDstSet(frame.descriptor_sets[i]);
+			writes[2].setDstSet(frame.descriptor_sets[i]);
 
 			device.updateDescriptorSets(static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
 		}

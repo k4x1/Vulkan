@@ -3,7 +3,7 @@
 #include "scene.h"
 #include <vector>
 #include <memory>
-
+#include "LightManager.h"
 // Input structure
 // key that isn't down or released has a value of 0
 // when key is pressed, its value is incremented every frame.
@@ -44,6 +44,7 @@ private:
     // Staging uniform data, will be copied to device-mapped memory ptr to update uniform data
     UBO_Textured uniform_data;
 
+
     // Buffers and memory for the cube
     vk::Buffer vertex_buffer;
     vk::DeviceMemory vertex_buffer_memory;
@@ -71,5 +72,12 @@ private:
     glm::mat4 model_matrix = {};
     glm::mat4 view_matrix = {};
     glm::mat4 projection_matrix = {};
+
+    glm::vec3 lightPos = glm::vec3(0.0f, 2.0f, 0.0f);
+    float lightIntensity = 100.0f;
+    glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    float constant = 1.0f;
+    float linear = 0.09f;
+    float quadratic = 0.032f;
 
 };

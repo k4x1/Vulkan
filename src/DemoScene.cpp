@@ -25,19 +25,28 @@ void DemoScene::cleanup_scene() {
 }
 
 void DemoScene::init_scene() {
-    for (int i = 0; i < 2; i++){
+    for (int i = 0; i < 2; i++) {
         meshModels.push_back(std::make_unique<MeshModel>());
         meshModels[i]->loadModel("resources/Models/AncientEmpire/SM_Prop_Statue_01.obj");
         meshModels[i]->loadVBO(device, gpu);
     }
+    PointLight newLight;
+
+    newLight.position = glm::vec3(0);
+    newLight.intensity = 1;
+    newLight.color = glm::vec3(1);
+    newLight.constant = 1.0f;
+    newLight.linear = 0.09f;
+    newLight.quadratic = 0.032f;
+    LightManager::GetInstance().Init(device, gpu);
+    LightManager::GetInstance().createPointLight(newLight);
     meshModels[0]->setModelMatrix(glm::vec3(0.01f),
         glm::vec3(-200, -100, 0),
         glm::vec3(0));
     meshModels[1]->setModelMatrix(glm::vec3(0.01f),
         glm::vec3(200, -100, 0),
         glm::vec3(0));
-
-    // Setup scene data
+    // Setup scene data 
     spin_speed = 40.0f;
     spin_control = 120.0f;
 
@@ -139,8 +148,8 @@ void DemoScene::populate_command_buffer(const vk::CommandBuffer& commandBuffer, 
     // Set scissor
     commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D{}, vk::Extent2D(width, height)));
 
-  
-  
+
+
 
     // Draw the loaded mesh
     for (int i = 0; i < meshModels.size(); i++)
@@ -153,17 +162,9 @@ void DemoScene::populate_command_buffer(const vk::CommandBuffer& commandBuffer, 
 
     commandBuffer.endRenderPass();
 }
-std::pair<void*, size_t> DemoScene::create_uniform_data()
-{
-    //uniform_data.model = *meshModel->GetModelMat();
-    //uniform_data.viewproj = projection_matrix * view_matrix;
+std::pair<void*, size_t> DemoScene::create_uniform_data() {
 
-    //UBO_Textured mesh_uniform_data;
-    //mesh_uniform_data.model = *meshModel->GetModelMat();
-    //mesh_uniform_data.viewproj = projection_matrix * view_matrix;
-
-    //return std::make_pair(&uniform_data, sizeof uniform_data);
-    return  std::make_pair(&uniform_data, sizeof uniform_data);
+    return std::make_pair(&uniform_data, sizeof uniform_data);
 }
 
 void DemoScene::new_frame() {
@@ -201,6 +202,8 @@ void DemoScene::update(float dt, std::vector<void*> uniform_memory_ptrs)
         }
     }
 
+    LightManager::GetInstance().updatePointLightBuffer(device);
+
     // Recalculate projection matrix to handle window resize
     projection_matrix = glm::perspective(glm::radians(45.0f), aspect_ratio, 0.1f, 10000.0f);
     // GLM projection is OpenGL format, flip Y to convert to Vulkan
@@ -223,7 +226,7 @@ void DemoScene::update(float dt, std::vector<void*> uniform_memory_ptrs)
     uniform_data.model = model_matrix;
     uniform_data.viewproj = VP;  // Update uniform data for the mesh
 
-    for (int i = 0; i< meshModels.size() ; i++)
+    for (int i = 0; i < meshModels.size(); i++)
     {
         meshModels[i]->updateUniformData(projection_matrix * view_matrix, uniform_memory_ptrs[i]);
     }

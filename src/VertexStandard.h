@@ -7,7 +7,14 @@
 struct UBO_Textured {
     glm::mat4 model;
     glm::mat4 viewproj;
+    glm::vec3 lightPos;
+    float lightIntensity;
+    glm::vec3 lightColor;
+    float constant;
+    float linear;
+    float quadratic;
 };
+
 struct VertexStandard {
 public:
     glm::vec3 Position;

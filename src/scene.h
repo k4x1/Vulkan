@@ -5,6 +5,7 @@
 #include "scene_data.h"
 #include "VertexStandard.h"
 #include "MeshModel.h"
+#include "LightManager.h"
 // Originally named: SwapchainImageResources, holds data required by frames-in-flight hence renamed to FrameResources
 // The number of FrameResources is the number of Swapchain images.
 // we do this to allow multiple frames to be processed and rendered to at the same time to minimize host idling as much
