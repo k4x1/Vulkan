@@ -73,11 +73,6 @@ private:
     glm::mat4 view_matrix = {};
     glm::mat4 projection_matrix = {};
 
-    glm::vec3 lightPos = glm::vec3(0.0f, 2.0f, 0.0f);
-    float lightIntensity = 100.0f;
-    glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-    float constant = 1.0f;
-    float linear = 0.09f;
-    float quadratic = 0.032f;
+ 
 
 };

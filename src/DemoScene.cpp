@@ -30,16 +30,23 @@ void DemoScene::init_scene() {
         meshModels[i]->loadModel("resources/Models/AncientEmpire/SM_Prop_Statue_01.obj");
         meshModels[i]->loadVBO(device, gpu);
     }
-    PointLight newLight;
-
-    newLight.position = glm::vec3(0);
-    newLight.intensity = 1;
-    newLight.color = glm::vec3(1);
-    newLight.constant = 1.0f;
-    newLight.linear = 0.09f;
-    newLight.quadratic = 0.032f;
     LightManager::GetInstance().Init(device, gpu);
-    LightManager::GetInstance().createPointLight(newLight);
+    PointLight newLight1;
+    newLight1.position = glm::vec3(10,0,0);
+    newLight1.intensity = 3;
+    newLight1.color = glm::vec3(0,0,1);
+    newLight1.constant = 1.0f;
+    newLight1.linear = 0.09f;
+    newLight1.quadratic = 0.032f;
+    LightManager::GetInstance().createPointLight(newLight1);
+    PointLight newLight2;
+    newLight2.position = glm::vec3(-10, 0, 0);
+    newLight2.intensity = 3;
+    newLight2.color = glm::vec3(1,0,0);
+    newLight2.constant = 1.0f;
+    newLight2.linear = 0.09f;
+    newLight2.quadratic = 0.032f;
+    LightManager::GetInstance().createPointLight(newLight2);
     meshModels[0]->setModelMatrix(glm::vec3(0.01f),
         glm::vec3(-200, -100, 0),
         glm::vec3(0));

@@ -16,5 +16,5 @@ constexpr uint32_t WINDOW_HEIGHT = 720;
 // Allow a maximum of two outstanding presentation operations.
 constexpr uint32_t FRAME_LAG = 2;
 
-constexpr char const* tex_files[] = {"vulkan.png"};
+constexpr char const* tex_files[] = {"PolygonAncientWorlds_Statue_01.png"};
 

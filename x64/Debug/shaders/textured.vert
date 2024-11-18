@@ -6,9 +6,9 @@ layout(std140, binding = 0) uniform UBO {
     mat4 VP;
 } ubo;
 
-layout(location = 0) in vec3 in_position;  // Matches VertexStandard::Position
-layout(location = 1) in vec3 in_normal;    // Matches VertexStandard::Normal
-layout(location = 2) in vec2 in_texcoord;  // Matches VertexStandard::TexCoord
+layout(location = 0) in vec3 in_position;  // Matches VertexStandard::position
+layout(location = 1) in vec3 in_normal;    // Matches VertexStandard::normal
+layout(location = 2) in vec2 in_texcoord;  // Matches VertexStandard::texCoord
 
 layout(location = 0) out VS_OUT {
     vec3 pos;

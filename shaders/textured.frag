@@ -26,7 +26,7 @@ layout(std140, binding = 2) uniform PointLightBuffer {
 } PLB;
 
 layout(location = 0) out vec4 outColor;
- 
+
 void main()
 {
     vec3 fragPos = ps_in.pos;
@@ -42,10 +42,10 @@ void main()
         float linear = PLB.pointLight[i].linear;
         float quadratic = PLB.pointLight[i].quadratic;
 
+        vec3 lightDir = normalize(lightPos - fragPos);
         float distance = length(lightPos - fragPos);
         float attenuation = 1.0 / (constant + linear * distance + quadratic * (distance * distance));
 
-        vec3 lightDir = normalize(lightPos - fragPos);
         float diff = max(dot(norm, lightDir), 0.0);
         vec3 diffuse = lightCol * diff * lightInt;
 
